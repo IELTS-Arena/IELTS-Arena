@@ -126,7 +126,7 @@ Respond in this exact JSON format:
           fontSize: '16px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer',
           marginBottom: '20px', opacity: dailyCount >= DAILY_LIMIT ? 0.5 : 1
         }}>
-          {loading ? 'Generating...' : '🎵 Generate Sentence'}
+        {loading ? 'Generating...' : '📝 Generate Sentence'}
         </button>
 
         {sentence && (
