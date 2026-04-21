@@ -12,7 +12,7 @@ export default function LandingPage({ onStart }) {
       padding: '20px'
     }}>
       <div style={{ textAlign: 'center', maxWidth: '700px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🎵</div>
+       <div style={{ fontSize: '48px', marginBottom: '10px' }}>📝</div>
         <h1 style={{
           fontSize: '48px',
           fontWeight: 'bold',
