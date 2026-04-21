@@ -136,11 +136,58 @@ Respond in this exact JSON format:
           </div>
         )}
 
-        {sentence && (
+{sentence && (
           <div style={{ marginBottom: '20px' }}>
             <label style={{ color: '#a0aec0', fontSize: '13px', display: 'block', marginBottom: '8px' }}>YOUR PARAPHRASE</label>
             <textarea value={userAnswer} onChange={e => setUserAnswer(e.target.value)}
               placeholder="Rewrite the sentence using different words and structure..."
               style={{ width: '100%', minHeight: '100px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '14px', color: 'white', fontSize: '15px', resize: 'vertical', boxSizing: 'border-box' }}
             />
-            <button onClick={checkAnswer}
+            <button onClick={checkAnswer} disabled={loading || !userAnswer.trim()} style={{
+              marginTop: '10px', padding: '12px 32px',
+              background: 'linear-gradient(135deg, #68d3d1, #38a169)',
+              color: 'white', border: 'none', borderRadius: '8px',
+              fontSize: '15px', fontWeight: 'bold', cursor: 'pointer'
+            }}>
+              {loading ? 'Checking...' : '✅ Check My Answer'}
+            </button>
+          </div>
+        )}
+
+        {feedback && !feedback.error && (
+          <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(74,158,255,0.3)', borderRadius: '12px', padding: '24px', marginBottom: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <span style={{ fontSize: '48px', fontWeight: 'bold', color: '#4a9eff' }}>Band {feedback.band}</span>
+            </div>
+            {[
+              { label: '📝 Vocabulary', value: feedback.vocabulary },
+              { label: '🔠 Structure', value: feedback.structure },
+              { label: '💬 Overall', value: feedback.overall },
+              { label: '✨ Improved Version', value: feedback.improved }
+            ].map((item, i) => (
+              <div key={i} style={{ marginBottom: '16px' }}>
+                <p style={{ color: '#4a9eff', fontSize: '13px', margin: '0 0 4px' }}>{item.label}</p>
+                <p style={{ color: 'white', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {feedback?.error && (
+          <div style={{ background: 'rgba(252,129,129,0.1)', border: '1px solid rgba(252,129,129,0.3)', borderRadius: '8px', padding: '16px', color: '#fc8181' }}>
+            {feedback.error}
+          </div>
+        )}
+
+        {dailyCount >= DAILY_LIMIT && (
+          <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: '#a0aec0' }}>
+            <p style={{ fontSize: '20px' }}>🎵 Daily limit reached</p>
+            <p>Come back tomorrow for 5 more free attempts!</p>
+            <p style={{ color: '#4a9eff' }}>Upgrade to Premium for unlimited practice →</p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
