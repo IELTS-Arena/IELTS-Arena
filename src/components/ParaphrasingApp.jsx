@@ -98,7 +98,7 @@ Respond in this exact JSON format:
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
         <div style={{ textAlign: 'center', padding: '30px 0 20px' }}>
-          <h1 style={{ color: 'white', fontSize: '32px', margin: '0' }}>🎵 IELTS Groove</h1>
+         <h1 style={{ color: 'white', fontSize: '32px', margin: '0' }}>📝 IELTS Groove</h1>
           <p style={{ color: '#4a9eff', fontSize: '14px', margin: '4px 0' }}>Paraphrasing Practice</p>
           <p style={{ color: attemptsLeft <= 1 ? '#fc8181' : '#68d391', fontSize: '13px' }}>
             {attemptsLeft} free attempts remaining today
