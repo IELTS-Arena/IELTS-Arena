@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 const TOPICS = [
   'Education', 'Technology', 'Environment', 'Health', 'Society',
@@ -23,7 +23,7 @@ function incrementDailyCount() {
   return count
 }
 
-export default function ParaphrasingApp() {
+export default function ParaphrasingApp({ onBack }) {
   const [topic, setTopic] = useState('Education')
   const [sentence, setSentence] = useState('')
   const [userAnswer, setUserAnswer] = useState('')
@@ -97,8 +97,14 @@ Respond in this exact JSON format:
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', fontFamily: 'Georgia, serif', padding: '20px' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
-        <div style={{ textAlign: 'center', padding: '30px 0 20px' }}>
-         <h1 style={{ color: 'white', fontSize: '32px', margin: '0' }}>📝 IELTS Groove</h1>
+        <button onClick={onBack} style={{
+          background: 'transparent', border: '1px solid rgba(255,255,255,0.2)',
+          color: '#a0aec0', padding: '8px 16px', borderRadius: '8px',
+          cursor: 'pointer', fontSize: '13px', marginBottom: '16px'
+        }}>← Back</button>
+
+        <div style={{ textAlign: 'center', padding: '20px 0 20px' }}>
+          <h1 style={{ color: 'white', fontSize: '32px', margin: '0' }}>📝 IELTS Groove</h1>
           <p style={{ color: '#4a9eff', fontSize: '14px', margin: '4px 0' }}>Paraphrasing Practice</p>
           <p style={{ color: attemptsLeft <= 1 ? '#fc8181' : '#68d391', fontSize: '13px' }}>
             {attemptsLeft} free attempts remaining today
@@ -126,7 +132,7 @@ Respond in this exact JSON format:
           fontSize: '16px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer',
           marginBottom: '20px', opacity: dailyCount >= DAILY_LIMIT ? 0.5 : 1
         }}>
-        {loading ? 'Generating...' : '📝 Generate Sentence'}
+          {loading ? 'Generating...' : '📝 Generate Sentence'}
         </button>
 
         {sentence && (
@@ -136,7 +142,7 @@ Respond in this exact JSON format:
           </div>
         )}
 
-{sentence && (
+        {sentence && (
           <div style={{ marginBottom: '20px' }}>
             <label style={{ color: '#a0aec0', fontSize: '13px', display: 'block', marginBottom: '8px' }}>YOUR PARAPHRASE</label>
             <textarea value={userAnswer} onChange={e => setUserAnswer(e.target.value)}
@@ -183,7 +189,6 @@ Respond in this exact JSON format:
           <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: '#a0aec0' }}>
             <p style={{ fontSize: '20px' }}>🎵 Daily limit reached</p>
             <p>Come back tomorrow for 5 more free attempts!</p>
-            <p style={{ color: '#4a9eff' }}>Upgrade to Premium for unlimited practice →</p>
           </div>
         )}
 
