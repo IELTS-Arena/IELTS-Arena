@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 const DAILY_LIMIT = 5
 
@@ -17,6 +17,25 @@ function incrementDailyCount() {
   return count
 }
 
+function highlightPassage(passage, sentence) {
+  if (!sentence) return <span>{passage}</span>
+  const idx = passage.indexOf(sentence)
+  if (idx === -1) return <span>{passage}</span>
+  return (
+    <>
+      <span>{passage.slice(0, idx)}</span>
+      <span style={{
+        background: 'rgba(29,158,117,0.25)',
+        borderBottom: '2px solid #1D9E75',
+        borderRadius: '3px',
+        padding: '1px 2px',
+        color: '#5DCAA5'
+      }}>{passage.slice(idx, idx + sentence.length)}</span>
+      <span>{passage.slice(idx + sentence.length)}</span>
+    </>
+  )
+}
+
 export default function TFNGApp({ onBack }) {
   const [dailyCount, setDailyCount] = useState(getDailyCount())
   const [loading, setLoading] = useState(false)
@@ -25,6 +44,8 @@ export default function TFNGApp({ onBack }) {
   const [showResults, setShowResults] = useState({})
   const [score, setScore] = useState({ correct: 0, wrong: 0, total: 0 })
   const [allAnswered, setAllAnswered] = useState(false)
+  const [usedTopics, setUsedTopics] = useState([])
+  const [highlightedSentence, setHighlightedSentence] = useState(null)
 
   const attemptsLeft = DAILY_LIMIT - dailyCount
 
@@ -35,6 +56,11 @@ export default function TFNGApp({ onBack }) {
     setAnswers({})
     setShowResults({})
     setAllAnswered(false)
+    setHighlightedSentence(null)
+
+    const avoidTopics = usedTopics.length > 0
+      ? `Do NOT use any of these topics: ${usedTopics.join(', ')}.`
+      : ''
 
     try {
       const response = await fetch('/api/messages', {
@@ -46,16 +72,20 @@ export default function TFNGApp({ onBack }) {
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1200,
+          max_tokens: 1500,
           messages: [{
             role: 'user',
-            content: `You are an IELTS Academic Reading expert. Generate a short academic reading passage (5-7 sentences) on a factual topic (science, environment, history, technology, health, or social trends). Then provide exactly 4 True/False/Not Given questions based on that passage.
+            content: `You are an IELTS Academic Reading expert. Generate a short academic reading passage (5-7 sentences) on a factual topic (science, environment, history, technology, health, or social trends). ${avoidTopics}
+
+Then provide exactly 4 True/False/Not Given questions based on that passage.
 
 Rules:
 - TRUE: the statement agrees with the passage
 - FALSE: the statement contradicts the passage
 - NOT GIVEN: the information is not in the passage
 Include a mix: at least 1 True, 1 False, 1 Not Given.
+
+For TRUE and FALSE answers, provide the exact sentence from the passage that proves the answer (copy it word for word). For NOT GIVEN, set relevantSentence to null.
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {
@@ -65,7 +95,8 @@ Respond ONLY with valid JSON, no markdown, no backticks:
     {
       "statement": "the statement to classify",
       "answer": "TRUE",
-      "explanation": "Brief explanation why this is TRUE/FALSE/NOT GIVEN referencing the passage"
+      "explanation": "Brief explanation why this is TRUE/FALSE/NOT GIVEN referencing the passage",
+      "relevantSentence": "exact sentence from passage that proves the answer, or null for NOT GIVEN"
     }
   ]
 }`
@@ -78,7 +109,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text)
       setPassageData(parsed)
-
+      setUsedTopics(prev => [...prev, parsed.topic])
       const newCount = incrementDailyCount()
       setDailyCount(newCount)
     } catch (e) {
@@ -95,7 +126,13 @@ Respond ONLY with valid JSON, no markdown, no backticks:
     setAnswers(newAnswers)
     setShowResults(newResults)
 
-    const correct = choice === passageData.questions[idx].answer
+    const q = passageData.questions[idx]
+    const correct = choice === q.answer
+
+    if (q.relevantSentence) {
+      setHighlightedSentence(q.relevantSentence)
+    }
+
     setScore(prev => ({
       correct: prev.correct + (correct ? 1 : 0),
       wrong: prev.wrong + (correct ? 0 : 1),
@@ -149,7 +186,6 @@ Respond ONLY with valid JSON, no markdown, no backticks:
           </p>
         </div>
 
-        {/* Score row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
           {[
             { label: 'Correct', value: score.correct, color: '#68d391' },
@@ -175,17 +211,20 @@ Respond ONLY with valid JSON, no markdown, no backticks:
 
         {passageData && (
           <>
-            {/* Passage */}
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(74,158,255,0.2)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <p style={{ color: '#4a9eff', fontSize: '11px', letterSpacing: '0.08em', marginBottom: '12px', margin: '0 0 12px' }}>
+              <p style={{ color: '#4a9eff', fontSize: '11px', letterSpacing: '0.08em', margin: '0 0 12px' }}>
                 READING PASSAGE — {passageData.topic.toUpperCase()}
               </p>
+              {highlightedSentence && (
+                <p style={{ color: '#5DCAA5', fontSize: '11px', margin: '0 0 10px', letterSpacing: '0.04em' }}>
+                  ↳ Highlighted sentence is the key evidence
+                </p>
+              )}
               <p style={{ color: 'white', fontSize: '15px', lineHeight: '1.8', margin: 0 }}>
-                {passageData.passage}
+                {highlightPassage(passageData.passage, highlightedSentence)}
               </p>
             </div>
 
-            {/* Questions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               {passageData.questions.map((q, idx) => (
                 <div key={idx} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '20px' }}>
@@ -210,10 +249,13 @@ Respond ONLY with valid JSON, no markdown, no backticks:
                       fontSize: '13px', lineHeight: '1.6',
                       color: answers[idx] === q.answer ? '#68d391' : '#fc8181'
                     }}>
-                      {answers[idx] === q.answer
-                        ? '✓ Correct. '
-                        : `✗ Incorrect — the answer is ${q.answer}. `}
+                      {answers[idx] === q.answer ? '✓ Correct. ' : `✗ Incorrect — the answer is ${q.answer}. `}
                       <span style={{ color: '#a0aec0' }}>{q.explanation}</span>
+                      {q.relevantSentence && (
+                        <div style={{ marginTop: '8px', color: '#5DCAA5', fontSize: '12px' }}>
+                          ↑ See highlighted sentence in the passage above
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
