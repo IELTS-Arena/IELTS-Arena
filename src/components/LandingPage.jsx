@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function LandingPage({ onStartParaphrasing, onStartTFNG }) {
+export default function LandingPage({ onStartParaphrasing, onStartTFNG, onStartHeading }) {
   return (
     <div style={{
       minHeight: '100vh',
@@ -100,7 +100,40 @@ export default function LandingPage({ onStartParaphrasing, onStartTFNG }) {
               Start Practising →
             </button>
           </div>
-
+{/* Heading Match Tool */}
+<div style={{
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(74,158,255,0.4)',
+  borderRadius: '16px',
+  padding: '32px 24px',
+  textAlign: 'left'
+}}>
+  <div style={{ fontSize: '36px', marginBottom: '12px' }}>📑</div>
+  <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px' }}>
+    Heading Matching
+  </h2>
+  <p style={{ color: '#a0aec0', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
+    Match each paragraph to the correct heading. A real IELTS Academic Reading skill-builder.
+  </p>
+  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+    {['Academic Texts', 'Paragraphs', 'AI Generated'].map(tag => (
+      <span key={tag} style={{
+        fontSize: '11px', padding: '3px 10px',
+        background: 'rgba(74,158,255,0.15)',
+        border: '1px solid rgba(74,158,255,0.3)',
+        borderRadius: '20px', color: '#4a9eff'
+      }}>{tag}</span>
+    ))}
+  </div>
+  <button onClick={onStartHeading} style={{
+    width: '100%',
+    background: 'linear-gradient(135deg, #185FA5, #378ADD)',
+    color: 'white', border: 'none', padding: '14px',
+    fontSize: '15px', fontWeight: 'bold', borderRadius: '10px', cursor: 'pointer'
+  }}>
+    Start Practising →
+  </button>
+</div>
         </div>
 
         <p style={{ color: '#718096', fontSize: '13px' }}>
