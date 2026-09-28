@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const DAILY_LIMIT = 5;
 const STORAGE_KEY = "headingMatch_attempts";
@@ -25,6 +25,21 @@ function incrementAttempts() {
   } catch {}
 }
 
+function HighlightedText({ text, highlight }) {
+  if (!highlight) return <span>{text}</span>;
+  const idx = text.indexOf(highlight);
+  if (idx === -1) return <span>{text}</span>;
+  return (
+    <span>
+      {text.slice(0, idx)}
+      <mark style={{ background: "#b7f0d8", color: "#0a5c3a", borderRadius: "3px", padding: "0 2px" }}>
+        {text.slice(idx, idx + highlight.length)}
+      </mark>
+      {text.slice(idx + highlight.length)}
+    </span>
+  );
+}
+
 export default function HeadingMatchApp() {
   const [attemptsLeft, setAttemptsLeft] = useState(DAILY_LIMIT - getAttemptsToday());
   const [loading, setLoading] = useState(false);
@@ -42,7 +57,7 @@ export default function HeadingMatchApp() {
     setSelections({});
     setSubmitted(false);
 
-    const prompt = `Generate an IELTS Academic Reading heading matching exercise. 
+    const prompt = `Generate an IELTS Academic Reading heading matching exercise.
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -68,6 +83,11 @@ Return ONLY a valid JSON object with this exact structure:
     "A": "Brief explanation of why this heading matches paragraph A",
     "B": "Brief explanation of why this heading matches paragraph B",
     "C": "Brief explanation of why this heading matches paragraph C"
+  },
+  "relevantText": {
+    "A": "exact sentence or phrase from paragraph A that best captures the main idea",
+    "B": "exact sentence or phrase from paragraph B that best captures the main idea",
+    "C": "exact sentence or phrase from paragraph C that best captures the main idea"
   }
 }
 
@@ -76,6 +96,7 @@ Rules:
 - Each paragraph should have one clear main idea
 - Headings should paraphrase the main idea, not copy words directly from the paragraph
 - Distractors should sound plausible but not match any paragraph
+- relevantText must be copied EXACTLY (character for character) from the paragraph text — it will be used for highlighting
 - Do not include any text outside the JSON object`;
 
     try {
@@ -133,7 +154,6 @@ Rules:
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0faf6", fontFamily: "'Segoe UI', sans-serif" }}>
-      {/* Header */}
       <div style={{ background: "#1D9E75", padding: "16px 24px", display: "flex", alignItems: "center", gap: "12px" }}>
         <button
           onClick={() => window.history.back()}
@@ -152,7 +172,6 @@ Rules:
 
       <div style={{ maxWidth: "780px", margin: "0 auto", padding: "24px 16px" }}>
 
-        {/* Intro card */}
         {!exercise && !loading && (
           <div style={{ background: "#fff", borderRadius: "16px", padding: "32px", textAlign: "center", boxShadow: "0 2px 12px rgba(29,158,117,0.08)", marginBottom: "24px" }}>
             <div style={{ fontSize: "40px", marginBottom: "12px" }}>📑</div>
@@ -178,7 +197,6 @@ Rules:
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div style={{ background: "#fff", borderRadius: "16px", padding: "48px", textAlign: "center", boxShadow: "0 2px 12px rgba(29,158,117,0.08)" }}>
             <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
@@ -186,17 +204,14 @@ Rules:
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div style={{ background: "#fff0f0", border: "1px solid #ffcccc", borderRadius: "10px", padding: "12px 16px", color: "#cc0000", marginBottom: "16px", fontSize: "14px" }}>
             {error}
           </div>
         )}
 
-        {/* Exercise */}
         {exercise && !loading && (
           <>
-            {/* Score banner */}
             {submitted && (
               <div style={{
                 background: score === 3 ? "#e6f9f0" : score === 2 ? "#fff8e6" : "#fff0f0",
@@ -206,9 +221,7 @@ Rules:
               }}>
                 <div style={{ fontSize: "28px" }}>{score === 3 ? "🎉" : score === 2 ? "👍" : "📚"}</div>
                 <div>
-                  <div style={{ fontWeight: "700", fontSize: "17px", color: "#222" }}>
-                    {score} out of 3 correct
-                  </div>
+                  <div style={{ fontWeight: "700", fontSize: "17px", color: "#222" }}>{score} out of 3 correct</div>
                   <div style={{ color: "#555", fontSize: "13px", marginTop: "2px" }}>
                     {score === 3 ? "Excellent! All headings matched correctly." : score === 2 ? "Good effort — check the explanations below." : "Review the explanations and try again."}
                   </div>
@@ -216,7 +229,6 @@ Rules:
               </div>
             )}
 
-            {/* Headings list */}
             <div style={{ background: "#fff", borderRadius: "14px", padding: "20px 24px", marginBottom: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
               <div style={{ fontWeight: "700", color: "#1D9E75", marginBottom: "12px", fontSize: "14px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 List of Headings
@@ -229,9 +241,9 @@ Rules:
               ))}
             </div>
 
-            {/* Paragraphs */}
             {exercise.paragraphs.map((para) => {
               const result = getResult(para.id);
+              const highlight = submitted && exercise.relevantText ? exercise.relevantText[para.id] : null;
               return (
                 <div key={para.id} style={{
                   background: "#fff",
@@ -245,16 +257,19 @@ Rules:
                     <div style={{ background: "#1D9E75", color: "#fff", borderRadius: "8px", padding: "4px 12px", fontWeight: "700", fontSize: "15px" }}>
                       Paragraph {para.id}
                     </div>
-                    {submitted && (
-                      <span style={{ fontSize: "20px" }}>{result === "correct" ? "✅" : "❌"}</span>
-                    )}
+                    {submitted && <span style={{ fontSize: "20px" }}>{result === "correct" ? "✅" : "❌"}</span>}
                   </div>
 
                   <p style={{ color: "#333", lineHeight: "1.75", fontSize: "15px", margin: "0 0 16px" }}>
-                    {para.text}
+                    <HighlightedText text={para.text} highlight={highlight} />
                   </p>
 
-                  {/* Dropdown */}
+                  {submitted && highlight && (
+                    <div style={{ fontSize: "12px", color: "#1D9E75", marginBottom: "12px", fontStyle: "italic" }}>
+                      🟢 Key sentence highlighted above
+                    </div>
+                  )}
+
                   <div>
                     <label style={{ fontSize: "13px", color: "#888", display: "block", marginBottom: "6px" }}>
                       Select heading for Paragraph {para.id}:
@@ -264,11 +279,8 @@ Rules:
                       onChange={(e) => handleSelect(para.id, e.target.value)}
                       disabled={submitted}
                       style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        borderRadius: "8px",
-                        border: "1.5px solid #d0ece6",
-                        fontSize: "14px",
+                        width: "100%", padding: "10px 12px", borderRadius: "8px",
+                        border: "1.5px solid #d0ece6", fontSize: "14px",
                         color: selections[para.id] ? "#222" : "#aaa",
                         background: submitted ? "#f9f9f9" : "#fff",
                         cursor: submitted ? "not-allowed" : "pointer"
@@ -281,16 +293,12 @@ Rules:
                     </select>
                   </div>
 
-                  {/* Explanation after submit */}
                   {submitted && (
                     <div style={{
                       marginTop: "14px",
                       background: result === "correct" ? "#e6f9f0" : "#fff5f5",
-                      borderRadius: "8px",
-                      padding: "12px 14px",
-                      fontSize: "14px",
-                      color: "#333",
-                      lineHeight: "1.6"
+                      borderRadius: "8px", padding: "12px 14px",
+                      fontSize: "14px", color: "#333", lineHeight: "1.6"
                     }}>
                       <strong style={{ color: result === "correct" ? "#1D9E75" : "#e05c5c" }}>
                         {result === "correct" ? "Correct" : `Incorrect — correct answer: Heading ${exercise.answers[para.id]}`}
@@ -303,7 +311,6 @@ Rules:
               );
             })}
 
-            {/* Submit / Try Again */}
             <div style={{ textAlign: "center", marginTop: "8px" }}>
               {!submitted ? (
                 <button
@@ -328,11 +335,6 @@ Rules:
                   >
                     Back to Home
                   </button>
-                </div>
-              )}
-              {attemptsLeft === 0 && !submitted && (
-                <div style={{ marginTop: "12px", color: "#888", fontSize: "13px" }}>
-                  This is your last attempt for today.
                 </div>
               )}
             </div>
